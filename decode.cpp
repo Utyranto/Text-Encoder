@@ -25,46 +25,49 @@ void insertionSort(tree array[], int size){
 
 }
 
-void merge(tree arr[], int a, int b, int c){ //represents left, middle, and right for int parameters.
-  int size1 = b - a + 1; //Establish the size
-  int size2 = c - b;
+void merge(tree arr[], int p, int q, int r){
+    // Create L ← A[p..q] and M ← A[q+1..r]
+  int n1 = q - p + 1;
+  int n2 = r - q;
 
-  tree Ebony[size1], Ivory[size2]; //Devil May Cry reference. This is for the "extra memory" part of merge sort.
+  tree L[n1], M[n2];
 
-  for (int i = 0; i < size1; i++){ //fill in the arrays.
-    Ebony[i] = arr[a + i];
-  }
-  for (int j = 0; j < size2; j++){
-    Ivory[j] = arr[b + 1 + j];
-  }
-  //maintain current index of sub-arrays and main array
-  int d, e, f; 
-  d = 0;
-  e = 0;
-  f = a;
+  for (int i = 0; i < n1; i++)
+    L[i] = arr[p + i];
+  for (int j = 0; j < n2; j++)
+    M[j] = arr[q + 1 + j];
 
-  //sort them into correct positions.
-  while (d < size1 && e < size2) {
-    if (Ebony[d].freq < Ivory[e].freq) { //this should put the same frequencies at the end.
-      arr[f] = Ebony[d];
-      d++;
+  // Maintain current index of sub-arrays and main array
+  int i, j, k;
+  i = 0;
+  j = 0;
+  k = p;
+
+  // Until we reach either end of either L or M, pick larger among
+  // elements L and M and place them in the correct position at A[p..r]
+  while (i < n1 && j < n2) {
+    if (L[i].freq <= M[j].freq) {
+      arr[k] = L[i];
+      i++;
     } else {
-      arr[f] = Ivory[e];
-      e++;
+      arr[k] = M[j];
+      j++;
     }
-    f++;
+    k++;
   }
 
-  while (d < size1) { //combine everything together.
-    arr[f] = Ebony[d];
-    d++;
-    f++;
+  // When we run out of elements in either L or M,
+  // pick up the remaining elements and put in A[p..r]
+  while (i < n1) {
+    arr[k] = L[i];
+    i++;
+    k++;
   }
 
-  while (e < size2) { //combine the last half.
-    arr[f] = Ivory[e];
-    e++;
-    f++;
+  while (j < n2) {
+    arr[k] = M[j];
+    j++;
+    k++;
   }
 }
 
@@ -72,10 +75,11 @@ void mergeSort(tree arr[], int left, int right){
     if (left < right) {
     int middle = left + (right - left) / 2;
 
-    mergeSort(arr, left, middle); //divide and conqeur
+    mergeSort(arr, left, middle);
     mergeSort(arr, middle + 1, right);
 
-    merge(arr, left, middle, right); //combine
+    // Merge the sorted subarrays
+    merge(arr, left, middle, right);
   }
 }
 
@@ -96,49 +100,6 @@ void encoder(symbol *root, string encoded){
     
 }
 
-void print2DUtil(symbol *root, int space)
-{
-    // Base case
-    if (root == NULL)
-        return;
- 
-    // Increase distance between levels
-    space += 10;
- 
-    // Process right child first
-    print2DUtil(root->right, space);
- 
-    // Print current node after space
-    // count
-    cout<<endl;
-    for (int i = 10; i < space; i++)
-        cout<<" ";
-    cout<< "(" << root->symbol << ") " << root->freq << " " << root->encoding <<"\n";
- 
-    // Process left child
-    print2DUtil(root->left, space);
-}
- 
-// Wrapper over print2DUtil()
-void print2D(symbol *root)
-{
-    // Pass initial space count as 0
-    print2DUtil(root, 0);
-}
-
-void printer(symbol *root, char key){
-    if (root == NULL)
-        return;
-    if(root->symbol == key){
-        cout << root->encoding;
-        return;
-    }
-
-    printer(root->right, key);
-
-    printer(root->left, key);
-
-}
 
 int main(int argc, char** argv){
 
@@ -209,8 +170,6 @@ symbol* Symbols = new symbol[NSYMBOLS];
             increm++;
         }
     } //ditto
-
-    int fullsize = alphaSize + nonAlphaSize;
 
     string choice = argv[2]; //reads second argument and performs either sorting method. Merge sort has not been completed yet so mergeSort only calls insertion.
     if (choice.compare("insertion") == 0){
@@ -293,31 +252,35 @@ symbol* Symbols = new symbol[NSYMBOLS];
     tL.root->parent = Root;
     tR.root->parent = Root;
 
-    //Not sure if it's the best way to do it but I have no other options.
-
     encoder(Root, "");
 
-    cout << fullsize << endl;
-    for (int i = 0; i < NSYMBOLS; i++){ //prints out the text. ID followed by frequency.
-        if (Symbols[i].freq > 0){
-            cout << i << '\t' << Symbols[i].symbol << "\t" << Symbols[i].encoding << endl;
+    symbol* current = Root; //establish a pointer to traverse through the tree.
+    string decoded = ""; //store the decoded string.
+    for(string encoded; getline(cin, encoded);){
+        for (int i = 0; i <= encoded.length(); i++) { //using <= to add in the last symbol before exiting.
+            if (current->left == NULL || current->right == NULL) { //have we reached a leaf node?
+                decoded += current->symbol; //adds in the symbol contained in current.
+                current = Root; //resets back to the root of the tree.
+                if (i == encoded.length()) //Stop the loop if we reached the end of the line.
+                    break;
+            } 
+            if (encoded[i] == '0') { //check if it's 0
+                current = current->left; //move to the left.
+            }
+            if (encoded[i] == '1') { //check if it's 1
+                current= current->right; //move to the right
+            }
+            
         }
-    }
-
-    cout << "\n";
-
-    for(string text; getline(cin, text);){
-        for(int i = 0; i < text.length(); i++){
-            printer(Root,text[i]);
-        }
-    cout << Symbols[10].encoding;
     }
     
-    // reset the pointers to where they were originally
+    cout << decoded; //This prints the decoded line
+
+    cout << "\n";
+    
     Alpha = Alpha - alphaSize + 1;
     NonAlpha = NonAlpha - nonAlphaSize + 1; 
 
-    // delete all dynamically allocated memory
     delete[] Alpha;
     delete[] NonAlpha;
 

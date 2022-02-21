@@ -24,7 +24,6 @@ symbol* Symbols = new symbol[NSYMBOLS]; //symbol array. Has 128 entries in ASCII
     }
 
     for (string text; getline(cin, text);){ //reads the lines one by one via file
-        int textlength = text.length();
         for (int i = 0; i < text.length(); i++)
         {
             Symbols[text[i]].freq += 1;
